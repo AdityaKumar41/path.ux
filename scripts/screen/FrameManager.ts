@@ -1010,6 +1010,15 @@ export class Screen<
   execKeyMap(e: KeyboardEvent) {
     let handled = false;
 
+    // Panel rebuilds can leave focus on a different editor from the pointer
+    // Resolve the hovered area for each shortcut instead of relying on sampled moves
+    const hovered = this.pickElement<ScreenArea>(this.mpos[0], this.mpos[1], {
+      nodeclass: ScreenArea,
+    });
+    if (hovered?.area) {
+      this.sareas.active = hovered;
+    }
+
     if (window.DEBUG?.keymap) {
       console.warn("execKeyMap called", e.keyCode, document.activeElement?.tagName);
     }
