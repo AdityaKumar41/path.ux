@@ -229,7 +229,7 @@ export class MenuWrangler {
     let clickTimer = 0;
 
     const eat = (e: Event) => {
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       e.preventDefault();
     };
 

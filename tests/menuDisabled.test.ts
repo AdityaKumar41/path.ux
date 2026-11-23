@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 import { menuWrangler } from "../scripts/menu/wrangler";
 import { newMenu, type Menu } from "../scripts/menu/menu";
 
@@ -218,4 +218,20 @@ test("closing an automatically searchable menu releases its only keyboard captur
   expect(menuWrangler.menustack.length).toBe(before + 1);
   menu.close();
   expect(menuWrangler.menustack.length).toBe(before);
+});
+
+test("a mouse menu press consumes its release before starting the chosen tool", () => {
+  const { menu } = buildMenu(["Extrude"]);
+  const order: string[] = [];
+  const spy = vi.spyOn(menuWrangler, "swallowRelease").mockImplementation(() => {
+    order.push("release");
+  });
+  menu._onselect = () => {
+    order.push("tool");
+  };
+  menu
+    .itemById("Extrude")!
+    .dispatchEvent(new PointerEvent("pointerdown", { pointerId: 7, pointerType: "mouse" }));
+  expect(order).toEqual(["release", "tool"]);
+  spy.mockRestore();
 });
