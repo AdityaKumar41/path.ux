@@ -343,6 +343,12 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
     (dom2 as HTMLDivElement & { parentWidget: unknown }).parentWidget = this.container;
 
+    if (setActive) {
+      this.setActive(
+        this.items.find((item) => this._selectable(item)),
+        false
+      );
+    }
     sbox.focus();
     sbox.on_change = () => {
       const t = sbox.text.trim().toLowerCase();
@@ -356,7 +362,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
       for (const item of this.items) {
         let ok = t == "";
-        ok = ok || item.innerHTML.toLowerCase().search(t) >= 0;
+        ok = ok || item.textContent?.toLowerCase().includes(t) === true;
 
         if (ok) {
           item.hidden = false;
@@ -368,8 +374,11 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
       // Moving off the filtered-out row waits for the pass to finish: mid-loop, every row not
       // yet visited is still hidden, so the walk could only land on one of those.
-      if (activeFiltered) {
-        this.selectNext(false);
+      if (activeFiltered || !this.activeItem) {
+        this.setActive(
+          this.items.find((item) => this._selectable(item)),
+          false
+        );
       }
     };
 
@@ -392,8 +401,6 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     this.started = true;
     this.focus();
 
-    menuWrangler.pushMenu(this);
-
     const dokey = (key: string) => {
       let val = this.getDefault(key) as string | number | undefined;
       if (typeof val === "number") {
@@ -414,6 +421,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     if (this.items.length > 15 && this.autoSearchMode) {
       return this.startSearch(prepend, setActive);
     }
+
+    menuWrangler.pushMenu(this);
 
     if (prepend) {
       this.container.prepend(this.dom);

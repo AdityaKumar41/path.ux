@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
+import { menuWrangler } from "../scripts/menu/wrangler";
 import { newMenu, type Menu } from "../scripts/menu/menu";
 
 beforeAll(() => {
@@ -194,4 +195,27 @@ describe("theme", () => {
     expect(menu.menustyle.textContent).toContain(".menuitem.disabled");
     expect(menu.getDefault("MenuTextDisabled")).toBeTruthy();
   });
+});
+
+describe("search menu keyboard activation", () => {
+  test("selects the matching literal label for Enter, including punctuation", () => {
+    const { menu, picked } = buildMenu(["Cube", "Monkey (Suzanne)"]);
+    menu.startSearch();
+    expect(menu.activeItem?._id).toBe("Cube");
+    menu.textbox!.text = "Monkey (Suzanne)";
+    menu.textbox!.on_change!("Monkey (Suzanne)");
+    expect(menu.activeItem?._id).toBe("Monkey (Suzanne)");
+    menu.click();
+    expect(picked).toEqual(["Monkey (Suzanne)"]);
+    menu.close();
+  });
+});
+
+test("closing an automatically searchable menu releases its only keyboard capture", () => {
+  const { menu } = buildMenu(Array.from({ length: 16 }, (_, i) => `item ${i}`));
+  const before = menuWrangler.menustack.length;
+  menu.start();
+  expect(menuWrangler.menustack.length).toBe(before + 1);
+  menu.close();
+  expect(menuWrangler.menustack.length).toBe(before);
 });
